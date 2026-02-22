@@ -1,0 +1,110 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="gripper">
+
+  <!-- Materials & Inertia Helper -->
+  <material name="gripper_grey"><color rgba="0.5 0.5 0.5 1.0"/></material>
+  <material name="gripper_black"><color rgba="0.1 0.1 0.1 1.0"/></material>
+
+  <xacro:macro name="box_inertia" params="m w h d">
+    <inertial>
+      <mass value="${m}"/>
+      <inertia ixx="${(m/12) * (h*h + d*d)}" ixy="0.0" ixz="0.0"
+               iyy="${(m/12) * (w*w + d*d)}" iyz="0.0"
+               izz="${(m/12) * (w*w + h*h)}"/>
+    </inertial>
+  </xacro:macro>
+
+  <!-- MAIN MACRO START -->
+  <xacro:macro name="gripper" params="parent_link">
+  
+    <!-- 1. Joint connecting gripper to the passed parent_link -->
+    <joint name="gripper_base_joint" type="fixed">
+      <parent link="${parent_link}"/>
+      <child link="gripper_base_link"/>
+      <origin xyz="0.15 0.05 0.13" rpy="0.900 0 1.5708"/>
+    </joint>
+    
+    <!-- 2. Gripper Links -->
+    <link name="gripper_base_link">
+      <visual>
+        <geometry><box size="0.24 0.08 0.08"/></geometry>
+        <material name="gripper_grey"/>
+      </visual>
+      <collision>
+        <geometry><box size="0.24 0.08 0.08"/></geometry>
+      </collision>
+      <xacro:box_inertia m="1.0" w="0.24" h="0.08" d="0.08"/>
+    </link>
+
+    <link name="right_finger">
+      <visual>
+        <origin xyz="0 0 0.08"/>
+        <geometry><box size="0.02 0.06 0.16"/></geometry>
+        <material name="gripper_black"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.08"/>
+        <geometry><box size="0.02 0.06 0.16"/></geometry>
+        <surface>
+          <friction>
+            <ode><mu>100.0</mu><mu2>100.0</mu2></ode>
+          </friction>
+        </surface>
+      </collision>
+      <xacro:box_inertia m="0.2" w="0.02" h="0.16" d="0.06"/>
+    </link>
+
+    <link name="left_finger">
+      <visual>
+        <origin xyz="0 0 0.08"/>
+        <geometry><box size="0.02 0.06 0.16"/></geometry>
+        <material name="gripper_black"/>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.08"/>
+        <geometry><box size="0.02 0.06 0.16"/></geometry>
+        <surface>
+          <friction>
+            <ode><mu>100.0</mu><mu2>100.0</mu2></ode>
+          </friction>
+        </surface>
+      </collision>
+      <xacro:box_inertia m="0.2" w="0.02" h="0.16" d="0.06"/>
+    </link>
+
+    <joint name="right_finger_joint" type="prismatic">
+      <parent link="gripper_base_link"/>
+      <child link="right_finger"/>
+      <origin xyz="0.08 0 0" rpy="0 0 0"/>
+      <axis xyz="1 0 0"/>
+      <limit lower="-0.08" upper="0.08" effort="100" velocity="0.5"/>
+    </joint>
+
+    <joint name="left_finger_joint" type="prismatic">
+      <parent link="gripper_base_link"/>
+      <child link="left_finger"/>
+      <origin xyz="-0.08 0 0" rpy="0 0 0"/>
+      <axis xyz="-1 0 0"/>
+      <limit lower="-0.08" upper="0.08" effort="100" velocity="0.5"/>
+    </joint>
+    
+    <!-- 3. ros2_control for gripper -->
+    <ros2_control name="GripperSystem" type="system">
+      <hardware>
+        <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+      </hardware>
+      <joint name="right_finger_joint">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+      <joint name="left_finger_joint">
+        <command_interface name="position"/>
+        <state_interface name="position"/>
+        <state_interface name="velocity"/>
+      </joint>
+    </ros2_control>
+
+  </xacro:macro>
+  <!-- MACRO END -->
+</robot>

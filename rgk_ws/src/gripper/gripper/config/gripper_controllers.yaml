@@ -1,0 +1,18 @@
+controller_manager:
+  ros__parameters:
+    update_rate: 250  # Hz
+    use_sim_time: true
+
+    joint_state_broadcaster:
+      type: joint_state_broadcaster/JointStateBroadcaster
+
+    # Controls the position of the gripper fingers
+    gripper_controller:
+      type: forward_command_controller/ForwardCommandController
+
+gripper_controller:
+  ros__parameters:
+        joints:
+        - left_finger_joint
+        - right_finger_joint
+        interface_name: position
